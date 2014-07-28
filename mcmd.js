@@ -1,9 +1,9 @@
 'use strict';
 
-var path = require( 'path' ),
-    chalk = require( 'chalk' ),
+var chalk = require( 'chalk' ),
     optionPattern = /(--([\w-]+)|-(\w+))(=(.*))?/,
-    valuePattern = /^[^-].*/;
+    valuePattern = /^[^-].*/,
+    useColors = true;
 
 /* =============================================================================================
    PUBLIC APIs
@@ -74,13 +74,11 @@ function Command( name, props ) {
     this.commands = {};
     this.parsed = {};
     this.args = [];
-
     this.parent = null;
 
     this.name = name;
     this.desc = props && props.desc || '';
     this.callback = props && props.callback;
-
 }
 
 /**
@@ -127,6 +125,16 @@ Command.prototype.command = function ( name, props ) {
  */
 Command.prototype.scriptName = function ( name ) {
     this.script = name;
+
+    return this;
+};
+
+/**
+ * Disable coloring in usage and error messages
+ * @return {Command}
+ */
+Command.prototype.noColors = function () {
+    useColors = false;
 
     return this;
 };
@@ -191,11 +199,11 @@ Command.prototype.usage = function () {
     write( ' ' + this._getCommandChain().join( ' ' ) );
 
     if ( commandNames.length ) {
-        write( chalk.yellow( ' <command>' ) );
+        write( yellow( ' <command>' ) );
     }
 
     if ( optionNames.length ) {
-        write( chalk.cyan( ' [options]' ) );
+        write( cyan( ' [options]' ) );
     }
 
     write( '\n' );
@@ -206,13 +214,13 @@ Command.prototype.usage = function () {
             return a.length > b.length ? a : b;
         } ).length;
 
-        writeLine( chalk.bold.yellow( 'Commands:\n' ) );
+        writeLine( chalk.bold( yellow( 'Commands:\n' ) ) );
         commandNames.sort().forEach( function ( name ) {
             var command = this.commands[ name ];
 
             write( '  ' + command.name );
             write( spaces( longest - command.name.length ) );
-            write( chalk.grey( command.desc ) + '\n' );
+            write( grey( command.desc ) + '\n' );
         }, this );
     }
 
@@ -227,13 +235,13 @@ Command.prototype.usage = function () {
         } );
         longest = options[ longest ].name.length;
 
-        writeLine( chalk.bold.cyan( 'Options:\n' ) );
+        writeLine( chalk.bold( cyan( 'Options:\n' ) ) );
         optionNames.sort().forEach( function ( name ) {
             var option = options[ name ];
 
             write( '  ' + option.name );
             write( spaces( longest - option.name.length ) );
-            write( chalk.grey( option.desc ) + '\n' );
+            write( grey( option.desc ) + '\n' );
         } );
     }
 
@@ -296,7 +304,7 @@ Command.prototype._getOption = function ( arg ) {
  * @private
  */
 Command.prototype._printError = function ( message ) {
-    writeLine( chalk.red( chalk.bold( 'Error: ' ) + message ) );
+    writeLine( red( chalk.bold( 'Error: ' ) + message ) );
     this.usage();
     process.exit( 1 );
 };
@@ -434,7 +442,23 @@ function writeLine( text ) {
     process.stdout.write( '\n' + text + '\n' );
 }
 
+function red( text ) {
+    return useColors ? chalk.red( text ) : text;
+}
+
+function yellow( text ) {
+    return useColors ? chalk.yellow( text ) : text;
+}
+
+function cyan( text ) {
+    return useColors ? chalk.cyan( text ) : text;
+}
+
+function grey( text ) {
+    return useColors ? chalk.grey( text ) : text;
+}
+
 module.exports.Option = Option;
 module.exports.Command = Command;
 module.exports = new Command();
-module.exports.script = path.basename( process.argv[ 1 ] );
+module.exports.script = require( 'path' ).basename( process.argv[ 1 ] );
