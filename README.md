@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/gregpabian/subcommander.svg?branch=master)](https://travis-ci.org/gregpabian/subcommander)
+
 # subcommander
 
 Command-line argument parser for Node.js with sub-command support.
