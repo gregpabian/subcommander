@@ -248,6 +248,21 @@ Command.prototype.usage = function () {
     write( '\n' );
 };
 
+/**
+ * Resets all properties of the command
+ * @return {Command}
+ */
+Command.prototype.reset = function () {
+    this.script = null;
+    this.options = {};
+    this.commands = {};
+    this.parsed = {};
+    this.args = [];
+    this.parent = null;
+
+    return this;
+};
+
 /* =============================================================================================
    PRIVATE APIs
    ============================================================================================= */
@@ -290,7 +305,7 @@ Command.prototype._getOption = function ( arg ) {
 
         return {
             name: name,
-            value: value || true,
+            value: value,
             unknown: true
         };
     }
@@ -370,6 +385,15 @@ Command.prototype._getParsed = function () {
         }
     }
 
+    if ( this.parent ) {
+        parents = this.parent._getParsed();
+        for ( name in parents ) {
+            if ( ( item = parents[ name ] ) !== undefined && !result[ name ] ) {
+                result[ name ] = item;
+            }
+        }
+    }
+
     if ( this.args ) {
         this.args.forEach( function ( arg, index ) {
             result[ index ] = arg;
@@ -401,6 +425,8 @@ Command.prototype._parseArgv = function ( argv ) {
                     i++;
                 } else if ( option.defaultValue ) {
                     option.value = option.defaultValue;
+                } else if ( option.unknown ) {
+                    option.value = true;
                 } else {
                     this._printError( 'Missing value for "' + option.name + '" option.' );
                 }
@@ -458,7 +484,8 @@ function grey( text ) {
     return useColors ? chalk.grey( text ) : text;
 }
 
+module.exports = new Command();
+
+module.exports.script = require( 'path' ).basename( process.argv[ 1 ] );
 module.exports.Option = Option;
 module.exports.Command = Command;
-module.exports = new Command();
-module.exports.script = require( 'path' ).basename( process.argv[ 1 ] );
