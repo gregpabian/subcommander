@@ -5,7 +5,9 @@
 Command-line argument parser for Node.js with sub-command support.
 
 Subcommander allows to define multiple levels of sub-commands with options for a single script.
-It also generates a nicely formatted usage information  for created CLI.
+It also generates a nicely formatted usage information for created CLI.
+
+To get more information on command/sub-command usage run it with `-h` or `--help` flag.
 
 ## Installation
 
@@ -16,10 +18,9 @@ npm install subcommander
 ## Usage
 
 ```javascript
-var sc = require('subcommander');
-
-var parsed = sc.parse();
-// returns and object containing parsed arguments
+var sc = require( 'subcommander' );
+console.log( sc.parse() );
+// outputs an object containing parsed arguments
 ```
 
 ## Examples
@@ -44,7 +45,7 @@ sc
 console.log( sc.parse() );
 ```
 
-*Note:* Options that were not defined will also appear in the result of `sc.parse()`.
+*Note:* Undefined options will also appear in the result of `sc.parse()`.
 
 ### Sub-command definition
 
@@ -124,7 +125,11 @@ sc.parse();
 
 ### `option(name, props)`
 
-Add new option.
+Add a new option for the current command or CLI's root. Following option formats are recognized:
+- `-f [value]`
+- `--foo [value]`
+- `-f=value`
+- `--foo=value`
 
 **Parameters**
 
@@ -144,7 +149,7 @@ Add new option.
 
 ### `command(name, props)`
 
-Add new (sub-)command.
+Add a new (sub-)command to the current command or CLI's root.
 
 **Parameters**
 
@@ -158,39 +163,35 @@ Add new (sub-)command.
 
 **Returns**: New (sub-)command instance
 
-### `parse(argv)`
+### `parse()`
 
-Parse the command line arguments
+Parse the command line arguments.
 
-**Parameters**
-
-- **argv**: Array.<String> Array of arguments *Optional*
-
-**Returns**: List of parsed arguments
+**Returns**: A list of parsed arguments
 
 ### `usage()`
 
 Print command's usage message on the STDOUT.
 
-### `scriptName()`
+### `scriptName(name)`
 
 Set the name of the script's executable.
 
 **Parameters**
 
-- **name**: String, Name of the executable
+- **name**: String, Name of the executable, if none - script name will be used while generating usage and error messages
 
 ### `noColors()`
 
-Disable coloring in usage and error messages
+Disable coloring in usage and error messages.
 
 ### `end()`
 
-End modifying current command and return to the parent
+End modifying current command and return to the parent.
 
 ### `reset()`
 
-Resets all properties of the command
+Resets all properties of the command.
 
 ## Tests
 ```
