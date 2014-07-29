@@ -1,35 +1,36 @@
 {
-	"name": "mcmd",
-	"version": "0.1.0",
-	"description": "Command-line argument parser for Node.js",
-	"main": "mcmd.js",
-	"scripts": {
-		"test": "jshint mcmd.js test/test.js && mocha test -R list --check-leaks"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/gregpabian/mcmd.git"
-	},
-	"keywords": [
-		"multiple",
-		"command",
-		"cli",
-		"argument",
-		"option",
-		"parser"
-	],
-	"author": "Greg Pabian <greg.pabian@gmail.com>",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/gregpabian/mcmd/issues"
-	},
-	"homepage": "https://github.com/gregpabian/mcmd",
-	"dependencies": {
-		"chalk": "^0.5.1"
-	},
-	"devDependencies": {
-		"chai": "^1.9.1",
-		"jshint": "^2.5.2",
-		"mocha": "^1.20.1"
-	}
+    "name": "mcmd",
+    "version": "0.1.0",
+    "description": "Command-line argument parser for Node.js",
+    "main": "mcmd.js",
+    "scripts": {
+        "test": "jshint mcmd.js test/test.js && mocha test -R spec --check-leaks"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/gregpabian/mcmd.git"
+    },
+    "keywords": [
+        "multiple",
+        "command",
+        "cli",
+        "argument",
+        "option",
+        "parser"
+    ],
+    "author": "Greg Pabian <greg.pabian@gmail.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/gregpabian/mcmd/issues"
+    },
+    "homepage": "https://github.com/gregpabian/mcmd",
+    "dependencies": {
+        "chalk": "^0.5.1"
+    },
+    "devDependencies": {
+        "chai": "^1.9.1",
+        "jshint": "^2.5.2",
+        "mocha": "^1.20.1",
+        "rewire": "^2.1.0"
+    }
 }
