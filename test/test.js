@@ -4,10 +4,10 @@
 'use strict';
 
 var rewire = require( 'rewire' ),
-    mcmd = rewire( '../' ),
+    sc = rewire( '../' ),
     expect = require( 'chai' ).expect;
 
-describe( 'mcmd', function () {
+describe( 'subcommander', function () {
     var oldExit,
         oldWrite,
         oldWriteLine,
@@ -16,8 +16,8 @@ describe( 'mcmd', function () {
 
     beforeEach( function () {
         oldExit = process.exit;
-        oldWrite = mcmd.__get__( 'write' );
-        oldWriteLine = mcmd.__get__( 'writeLine' );
+        oldWrite = sc.__get__( 'write' );
+        oldWriteLine = sc.__get__( 'writeLine' );
         output = '',
         code;
 
@@ -25,68 +25,68 @@ describe( 'mcmd', function () {
             code = c;
         };
 
-        mcmd.__set__( 'write', function ( text ) {
+        sc.__set__( 'write', function ( text ) {
             output += text;
         } );
 
-        mcmd.__set__( 'writeLine', function ( text ) {
+        sc.__set__( 'writeLine', function ( text ) {
             output += text;
         } );
     } );
 
     afterEach( function () {
         process.exit = oldExit;
-        mcmd.__set__( 'write', oldWrite );
-        mcmd.__set__( 'writeLine', oldWriteLine );
+        sc.__set__( 'write', oldWrite );
+        sc.__set__( 'writeLine', oldWriteLine );
 
-        mcmd.reset();
+        sc.reset();
     } );
 
     it( 'should expose its public API', function () {
-        expect( mcmd ).to.be.instanceof( mcmd.Command );
-        expect( Object.getPrototypeOf( mcmd ) ).to.contain.keys(
+        expect( sc ).to.be.instanceof( sc.Command );
+        expect( Object.getPrototypeOf( sc ) ).to.contain.keys(
             [ 'option', 'command', 'parse', 'usage', 'scriptName', 'noColors', 'end' ]
         );
     } );
 
     it( 'should parse unknown -x option as a flag', function () {
-        expect( mcmd.parse( [ '-f' ] ) ).to.deep.equal( {
+        expect( sc.parse( [ '-f' ] ) ).to.deep.equal( {
             f: true
         } );
     } );
 
     it( 'should parse undefined --xxx option as a flag', function () {
-        expect( mcmd.parse( [ '--foo' ] ) ).to.deep.equal( {
+        expect( sc.parse( [ '--foo' ] ) ).to.deep.equal( {
             foo: true
         } );
     } );
 
     it( 'should parse undefined -x option and its value', function () {
-        expect( mcmd.parse( [ '-f', 'bar' ] ) ).to.deep.equal( {
+        expect( sc.parse( [ '-f', 'bar' ] ) ).to.deep.equal( {
             f: 'bar'
         } );
     } );
 
     it( 'should parse undefined --xxx option and its value', function () {
-        expect( mcmd.parse( [ '--foo', 'bar' ] ) ).to.deep.equal( {
+        expect( sc.parse( [ '--foo', 'bar' ] ) ).to.deep.equal( {
             foo: 'bar'
         } );
     } );
 
     it( 'should parse undefined -x=yyy option and its value', function () {
-        expect( mcmd.parse( [ '-f=bar' ] ) ).to.deep.equal( {
+        expect( sc.parse( [ '-f=bar' ] ) ).to.deep.equal( {
             f: 'bar'
         } );
     } );
 
     it( 'should parse undefined --xxx=yyy option and its value', function () {
-        expect( mcmd.parse( [ '--foo=bar' ] ) ).to.deep.equal( {
+        expect( sc.parse( [ '--foo=bar' ] ) ).to.deep.equal( {
             foo: 'bar'
         } );
     } );
 
     it( 'should add unrecognized arguments to the output', function () {
-        expect( mcmd.parse( [ '--foo=foo', 'bar', '-f', 'quux', 'baz' ] ) ).to.deep.equal( {
+        expect( sc.parse( [ '--foo=foo', 'bar', '-f', 'quux', 'baz' ] ) ).to.deep.equal( {
             foo: 'foo',
             f: 'quux',
             '0': 'bar',
@@ -100,7 +100,7 @@ describe( 'mcmd', function () {
         };
 
         function redefine() {
-            return mcmd.reset().option( 'foo', {
+            return sc.reset().option( 'foo', {
                 abbr: 'f',
                 desc: 'desc for foo'
             } );
@@ -108,9 +108,9 @@ describe( 'mcmd', function () {
 
         redefine();
 
-        expect( mcmd.options ).to.have.key( 'foo' );
-        expect( mcmd.options.foo ).to.be.instanceof( mcmd.Option );
-        expect( mcmd.parse( [ '-f', 'bar' ] ) ).to.deep.equal( expected );
+        expect( sc.options ).to.have.key( 'foo' );
+        expect( sc.options.foo ).to.be.instanceof( sc.Option );
+        expect( sc.parse( [ '-f', 'bar' ] ) ).to.deep.equal( expected );
         expect( redefine().parse( [ '--foo', 'bar' ] ) ).to.deep.equal( expected );
         expect( redefine().parse( [ '-f=bar' ] ) ).to.deep.equal( expected );
         expect( redefine().parse( [ '--foo=bar' ] ) ).to.deep.equal( expected );
@@ -124,7 +124,7 @@ describe( 'mcmd', function () {
             };
 
             expect(
-                mcmd.option( 'foo', {
+                sc.option( 'foo', {
                     abbr: 'f',
                     flag: true,
                     desc: 'desc for foo flag'
@@ -132,7 +132,7 @@ describe( 'mcmd', function () {
             ).to.deep.equal( expected );
 
             expect(
-                mcmd.reset().option( 'foo', {
+                sc.reset().option( 'foo', {
                     abbr: 'f',
                     flag: true,
                     desc: 'desc for foo flag'
@@ -146,13 +146,13 @@ describe( 'mcmd', function () {
                 '0': 'bar'
             };
 
-            mcmd.option( 'foo', {
+            sc.option( 'foo', {
                 abbr: 'f',
                 desc: 'desc for foo',
                 default: 'baz'
             } );
 
-            expect( mcmd.parse( [ 'bar' ] ) ).to.deep.equal( expected );
+            expect( sc.parse( [ 'bar' ] ) ).to.deep.equal( expected );
         } );
 
         it( 'should override a default value', function () {
@@ -161,13 +161,13 @@ describe( 'mcmd', function () {
                 '0': 'bar'
             };
 
-            mcmd.option( 'foo', {
+            sc.option( 'foo', {
                 abbr: 'f',
                 desc: 'desc for foo',
                 default: 'baz'
             } );
 
-            expect( mcmd.parse( [ 'bar', '--foo', 'quux' ] ) ).to.deep.equal( expected );
+            expect( sc.parse( [ 'bar', '--foo', 'quux' ] ) ).to.deep.equal( expected );
         } );
 
         it( 'should return a pre-formatted usage information', function () {
@@ -176,34 +176,34 @@ describe( 'mcmd', function () {
                 desc: 'desc for foo [bar]'
             };
 
-            mcmd.option( 'foo', {
+            sc.option( 'foo', {
                 abbr: 'f',
                 desc: 'desc for foo',
                 default: 'bar',
                 valueName: 'value'
             } );
 
-            expect( mcmd.options.foo.getUsage() ).to.deep.equal( expected );
+            expect( sc.options.foo.getUsage() ).to.deep.equal( expected );
         } );
     } );
 
     it( 'should define a command', function () {
-        mcmd.command( 'foo', {
+        sc.command( 'foo', {
             desc: 'desc for foo',
             callback: function () {}
         } );
 
-        expect( mcmd.commands ).to.have.key( 'foo' );
-        expect( mcmd.commands.foo ).to.be.instanceof( mcmd.Command );
+        expect( sc.commands ).to.have.key( 'foo' );
+        expect( sc.commands.foo ).to.be.instanceof( sc.Command );
     } );
 
     it( 'should report an error if no command was given', function () {
-        mcmd.command( 'foo', {
+        sc.command( 'foo', {
             desc: 'desc for foo',
             callback: function () {}
         } );
 
-        mcmd.parse( [ '--bar', 'baz' ] );
+        sc.parse( [ '--bar', 'baz' ] );
 
         expect( code ).to.equal( 1 );
         expect( output ).to.equal(
@@ -215,7 +215,7 @@ describe( 'mcmd', function () {
 
     describe( 'command', function () {
         it( 'should execute its callback with parsed arguments', function ( done ) {
-            mcmd.command( 'foo', {
+            sc.command( 'foo', {
                 desc: 'desc for foo',
                 callback: function ( parsed ) {
                     expect( parsed ).to.deep.equal( {
@@ -227,11 +227,11 @@ describe( 'mcmd', function () {
                 }
             } );
 
-            mcmd.parse( [ 'foo', '--bar', 'baz', 'quux' ] );
+            sc.parse( [ 'foo', '--bar', 'baz', 'quux' ] );
         } );
 
         it( 'should define a sub-command', function () {
-            var foo = mcmd.command( 'foo', {
+            var foo = sc.command( 'foo', {
                     desc: 'desc for foo',
                     callback: function () {}
                 } ),
@@ -240,18 +240,18 @@ describe( 'mcmd', function () {
                     callback: function () {}
                 } );
 
-            expect( mcmd.commands ).to.have.key( 'foo' );
-            expect( mcmd.commands.foo ).to.equal( foo );
+            expect( sc.commands ).to.have.key( 'foo' );
+            expect( sc.commands.foo ).to.equal( foo );
 
-            expect( mcmd.commands.foo.commands ).to.have.key( 'bar' );
-            expect( mcmd.commands.foo.commands.bar ).to.equal( bar );
+            expect( sc.commands.foo.commands ).to.have.key( 'bar' );
+            expect( sc.commands.foo.commands.bar ).to.equal( bar );
         } );
 
     } );
 
     describe( 'sub-command', function () {
         it( 'should execute its callback with parsed arguments', function ( done ) {
-            mcmd
+            sc
                 .command( 'foo', {
                     desc: 'desc for foo',
                     callback: function () {}
@@ -267,11 +267,11 @@ describe( 'mcmd', function () {
                     }
                 } );
 
-            mcmd.parse( [ 'foo', 'bar', '--baz', 'quux' ] );
+            sc.parse( [ 'foo', 'bar', '--baz', 'quux' ] );
         } );
 
         it( 'should return its parent using end() method', function () {
-            mcmd
+            sc
                 .command( 'foo', {
                     desc: 'desc for foo',
                     callback: function () {}
@@ -282,12 +282,12 @@ describe( 'mcmd', function () {
                     callback: function () {}
                 } );
 
-            expect( mcmd.commands ).to.have.keys( [ 'foo', 'bar' ] );
-            expect( mcmd.commands.foo.commands ).to.be.empty;
+            expect( sc.commands ).to.have.keys( [ 'foo', 'bar' ] );
+            expect( sc.commands.foo.commands ).to.be.empty;
         } );
 
         it( 'should inherit its parent\'s options and its default values', function ( done ) {
-            mcmd
+            sc
                 .command( 'foo', {
                     desc: 'desc for foo',
                     callback: function () {}
@@ -313,12 +313,12 @@ describe( 'mcmd', function () {
                     desc: 'desc for quux'
                 } );
 
-            mcmd.parse( [ 'foo', 'bar', '--quux', 'quax' ] );
+            sc.parse( [ 'foo', 'bar', '--quux', 'quax' ] );
         } );
     } );
 
     it( 'should print usage information', function () {
-        mcmd
+        sc
             .option( 'baz', {
                 abbr: 'b',
                 desc: 'desc for baz',
@@ -340,7 +340,7 @@ describe( 'mcmd', function () {
                 callback: function () {}
             } );
 
-        mcmd.usage();
+        sc.usage();
 
         expect( code ).to.equal( 1 );
         expect( output ).to.equal(

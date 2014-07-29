@@ -1,18 +1,19 @@
 {
-    "name": "mcmd",
+    "name": "subcommander",
     "version": "0.1.0",
-    "description": "Command-line argument parser for Node.js",
-    "main": "mcmd.js",
+    "description": "Command-line argument parser with sub-command support",
+    "main": "subcommander.js",
     "scripts": {
-        "test": "jshint mcmd.js test/test.js && mocha test -R spec --check-leaks"
+        "test": "jshint subcommander.js test/test.js && mocha test -R spec --check-leaks"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/gregpabian/mcmd.git"
+        "url": "https://github.com/gregpabian/subcommander.git"
     },
     "keywords": [
-        "multiple",
         "command",
+        "sub-command",
+        "sub",
         "cli",
         "argument",
         "option",
@@ -21,9 +22,9 @@
     "author": "Greg Pabian <greg.pabian@gmail.com>",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/gregpabian/mcmd/issues"
+        "url": "https://github.com/gregpabian/subcommander/issues"
     },
-    "homepage": "https://github.com/gregpabian/mcmd",
+    "homepage": "https://github.com/gregpabian/subcommander",
     "dependencies": {
         "chalk": "^0.5.1"
     },
