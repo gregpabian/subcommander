@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/gregpabian/subcommander.svg?branch=master)](https://travis-ci.org/gregpabian/subcommander)
+[![NPM Version](http://img.shields.io/npm/v/subcommander.svg)](https://www.npmjs.org/package/subcommander)
 
 # subcommander
 
@@ -28,7 +29,7 @@ console.log( sc.parse() );
 ### Simple option definition
 
 ```javascript
-var sc = require( '../' );
+var sc = require( 'subcommander' );
 
 sc
     .option( 'foo', {
@@ -50,7 +51,7 @@ console.log( sc.parse() );
 ### Sub-command definition
 
 ```javascript
-var sc = require( '../' );
+var sc = require( 'subcommander' );
 
 sc
     .command( 'version', {
@@ -119,7 +120,7 @@ sc
     desc: 'description for quux',
     callback: function () {}
   });
- 
+
 sc.parse();
 ```
 
