@@ -4,10 +4,8 @@
 
 Command-line argument parser for Node.js with sub-command support.
 
-Subcommander allows to define multiple levels of sub-commands with options in a single script.
-Sub-commands inherit its parent's options and default values.
-
-Additionally a nicely-formatted usage message is generated and available when `-h` or `--help` flag is given.
+Subcommander allows to define multiple levels of sub-commands with options for a single script.
+It also generates a nicely formatted usage information  for created CLI.
 
 ## Installation
 
@@ -24,9 +22,80 @@ var parsed = sc.parse();
 // returns and object containing parsed arguments
 ```
 
+## Examples
+
+### Simple option definition
+
+```javascript
+var sc = require( '../' );
+
+sc
+    .option( 'foo', {
+        abbr: 'f',
+        desc: 'description for option foo',
+        default: 'bar'
+    } )
+    .option( 'baz', {
+        abbr: 'b',
+        desc: 'description for baz flag',
+        flag: true
+    } );
+
+console.log( sc.parse() );
+```
+
+*Note:* Options that were not defined will also appear in the result of `sc.parse()`.
+
+### Sub-command definition
+
+```javascript
+var sc = require( '../' );
+
+sc
+    .command( 'version', {
+        desc: 'display app\'s version',
+        callback: function () {
+            console.log( 'version' );
+        }
+    } )
+    .end()
+    .command( 'server', {
+        desc: 'handle the server'
+    } )
+    .option( 'port', {
+        abbr: 'p',
+        desc: 'Server port',
+        default: '8080'
+    } )
+    .option( 'hostname', {
+        abbr: 'H',
+        desc: 'Server hostname'
+    } )
+    .command( 'start', {
+        desc: 'start the server',
+        callback: function ( options ) {
+            var port = options.port,
+                hostname = options.hostname;
+
+            console.log( port, hostname );
+        }
+    } )
+    .end()
+    .command( 'stop', {
+        desc: 'stop the server',
+        callback: function () {}
+    } );
+
+sc.parse();
+```
+
+This will create a CLI with two commands: `version` and `server`.
+Server will actually be a wrapper for its two sub-commands: `start` and `stop`.
+Additionally `start` and `stop` will inherit options form its parent and will handle `--port` and `--hostname`.
+
 ## API
 
-Subcommander API is chainable which means you can do the following:
+Subcommander exposes a chainable API which means you can do the following:
 
 ```javascript
 var sc = require('subcommander');
@@ -52,10 +121,6 @@ sc
  
 sc.parse();
 ```
-
-This will create a CLI with two commands: `foo` and `quux`.
-
-Additionally, `foo` command will accept `--bar` and `--baz` options.
 
 ### `option(name, props)`
 
@@ -127,9 +192,10 @@ End modifying current command and return to the parent
 
 Resets all properties of the command
 
-## Examples
-
-TODO
+## Tests
+```
+npm test
+```
 
 ## License
 

@@ -4,7 +4,7 @@
     "description": "Command-line argument parser with sub-command support",
     "main": "subcommander.js",
     "scripts": {
-        "test": "jshint subcommander.js test/test.js && mocha test -R spec --check-leaks"
+        "test": "jshint subcommander.js test/ examples/ && mocha test -R spec --check-leaks"
     },
     "repository": {
         "type": "git",
