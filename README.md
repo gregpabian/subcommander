@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/gregpabian/subcommander.svg?branch=master)](https://travis-ci.org/gregpabian/subcommander)
+[![Coverage Status](https://coveralls.io/repos/gregpabian/subcommander/badge.png)](https://coveralls.io/r/gregpabian/subcommander)
 [![NPM Version](http://img.shields.io/npm/v/subcommander.svg)](https://www.npmjs.org/package/subcommander)
 
 # subcommander
