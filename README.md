@@ -6,10 +6,11 @@
 
 Command-line argument parser for Node.js with sub-command support.
 
-Subcommander allows to define multiple levels of sub-commands with options for a single script.
+Subcommander allows you to define multiple levels of sub-commands with options in a single script.
+
 It also generates a nicely formatted usage information for created CLI.
 
-To get more information on command/sub-command usage run it with `-h` or `--help` flag.
+![Subcommander screenshot](https://raw.githubusercontent.com/gregpabian/subcommander/master/screenshot.png "")
 
 ## Installation
 
@@ -35,34 +36,33 @@ var sc = require( 'subcommander' );
 sc
     .option( 'foo', {
         abbr: 'f',
-        desc: 'description for option foo',
+        desc: 'description for a foo option',
         default: 'bar'
     } )
     .option( 'baz', {
         abbr: 'b',
-        desc: 'description for baz flag',
+        desc: 'description for a baz flag',
         flag: true
     } );
 
 console.log( sc.parse() );
 ```
 
-*Note:* Undefined options will also appear in the result of `sc.parse()`.
+*Note:* Undefined options will also appear in the output of `sc.parse()`.
 
 ### Sub-command definition
 
 ```javascript
 var sc = require( 'subcommander' );
 
-sc
-    .command( 'version', {
-        desc: 'display app\'s version',
-        callback: function () {
-            console.log( 'version' );
-        }
-    } )
-    .end()
-    .command( 'server', {
+sc.command( 'version', {
+    desc: 'display app\'s version',
+    callback: function () {
+        console.log( 'version' );
+    }
+} );
+
+var srv = sc.command( 'server', {
         desc: 'handle the server'
     } )
     .option( 'port', {
@@ -73,28 +73,38 @@ sc
     .option( 'hostname', {
         abbr: 'H',
         desc: 'Server hostname'
-    } )
-    .command( 'start', {
-        desc: 'start the server',
-        callback: function ( options ) {
-            var port = options.port,
-                hostname = options.hostname;
-
-            console.log( port, hostname );
-        }
-    } )
-    .end()
-    .command( 'stop', {
-        desc: 'stop the server',
-        callback: function () {}
     } );
+    
+srv.command( 'start', {
+    desc: 'start the server',
+    callback: function ( options ) {
+        var port = options.port,
+            hostname = options.hostname;
+
+        console.log( port, hostname );
+    }
+} );
+
+srv.command( 'stop', {
+    desc: 'stop the server',
+    callback: function () {
+        // callback body
+    }
+} );
 
 sc.parse();
 ```
 
 This will create a CLI with two commands: `version` and `server`.
-Server will actually be a wrapper for its two sub-commands: `start` and `stop`.
-Additionally `start` and `stop` will inherit options form its parent and will handle `--port` and `--hostname`.
+A `server` command will actually be a wrapper for its two sub-commands: `start` and `stop`.
+Additionally `start` and `stop` commands will inherit options from its parent and will handle `--port` and `--hostname` options.
+
+Created comands:
+```
+$ script server start [options]
+$ script server stop [options]
+$ script version [options]
+```
 
 ## API
 
@@ -104,10 +114,12 @@ Subcommander exposes a chainable API which means you can do the following:
 var sc = require('subcommander');
 
 sc
+  // add top-level command - foo
   .command('foo', {
     desc: 'description for foo',
     callback: function () {}
   })
+    // add options for the foo command
     .option('bar', {
       abbr: 'b',
       desc: 'description for bar'
@@ -117,6 +129,7 @@ sc
       desc: 'description for baz'
     })
   .end()
+  // add top-level command - quux
   .command('quux', {
     desc: 'description for quux',
     callback: function () {}
@@ -127,7 +140,7 @@ sc.parse();
 
 ### `option(name, props)`
 
-Add a new option for the current command or CLI's root. Following option formats are recognized:
+Add a new option for the current command or the CLI's root. Following option formats are recognized:
 - `-f [value]`
 - `--foo [value]`
 - `-f=value`
@@ -161,7 +174,7 @@ Add a new (sub-)command to the current command or CLI's root.
 
   - **props.desc**: String, Command's description
 
-  - **props.callback**: String, Command's callback function executed if the command is run
+  - **props.callback**: String, Callback function executed for the command
 
 **Returns**: New (sub-)command instance
 
@@ -189,7 +202,7 @@ Disable coloring in usage and error messages.
 
 ### `end()`
 
-End modifying current command and return to the parent.
+End modifying current command and return its parent.
 
 ### `reset()`
 

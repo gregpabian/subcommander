@@ -66,7 +66,7 @@ Option.prototype.getUsage = function () {
  * @param {String} name             Command's name
  * @param {Object} props            Command's properties
  * @param {String} [props.desc]     Command's description
- * @param {String} [props.callback] Command's callback function executed if the command is run
+ * @param {String} [props.callback] Callback function for the command
  * @constructor
  */
 function Command( name, props ) {
@@ -83,7 +83,11 @@ function Command( name, props ) {
 }
 
 /**
- * Add new option.
+ * Add a new option to the current command or the CLI's root. Following option formats are recognized:
+ * - `-f [value]`
+ * - `--foo [value]`
+ * - `-f=value`
+ * - `--foo=value`
  * @param  {String}  name             Option's name
  * @param  {Object}  props            Option's properties
  * @param  {String}  [prop.abbr]      Option's abbreviation
@@ -102,7 +106,7 @@ Command.prototype.option = function ( name, props ) {
 };
 
 /**
- * Add new (sub-)command.
+ * Add a new (sub-)command to the current command or CLI's root.
  * @param  {String} name             Command's name
  * @param  {Object} props            Command's properties
  * @param  {String} [props.desc]     Command's description
