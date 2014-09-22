@@ -1,6 +1,6 @@
 {
     "name": "subcommander",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Command-line argument parser with sub-command support",
     "main": "subcommander.js",
     "scripts": {
