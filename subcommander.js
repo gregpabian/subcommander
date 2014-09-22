@@ -36,6 +36,7 @@ function Option( name, props ) {
 Option.prototype.getUsage = function () {
     var string = [];
 
+    /* istanbul ignore else */
     if ( this.abbr ) {
         string.push( '-' + this.abbr );
 
@@ -54,7 +55,7 @@ Option.prototype.getUsage = function () {
 
     return {
         name: string.join( ' ' ),
-        desc: this.desc + ( this.defaultValue ? ' [' + this.defaultValue + ']' : '' )
+        desc: this.desc + ( this.defaultValue ? ( this.desc ? ' ' : '' ) + '[' + this.defaultValue + ']' : '' )
     };
 };
 
@@ -148,11 +149,22 @@ Command.prototype.parse = function ( argv ) {
     var expectCommand = Object.keys( this.commands ).length > 0,
         command;
 
+    /* istanbul ignore next */
     argv = argv || process.argv.slice( 2 );
 
     if ( expectCommand ) {
         if ( ( !argv[ 0 ] || argv[ 0 ][ 0 ] === '-' ) ) {
-            this._printError( 'Missing command for "' + this._getScriptName() + '".' );
+            // show usage information
+            if ( argv.some( function ( arg ) {
+                var match = optionPattern.exec( arg ),
+                    name = match && ( match[ 2 ] || match[ 3 ] );
+
+                return name === 'h' || name === 'help';
+            } ) ) {
+                return this.usage();
+            } else {
+                this._printError( 'Missing command for "' + this._getScriptName() + '".' );
+            }
         } else if ( ( command = this.commands[ argv[ 0 ] ] ) ) {
             return command.parse.call( command, argv.slice( 1 ) );
         } else {
@@ -344,6 +356,7 @@ Command.prototype._getOptions = function () {
         name;
 
     for ( name in this.options ) {
+        /* istanbul ignore else */
         if ( this.options[ name ] !== undefined ) {
             result[ name ] = this.options[ name ];
         }
@@ -352,6 +365,7 @@ Command.prototype._getOptions = function () {
     if ( this.parent ) {
         parents = this.parent._getOptions();
         for ( name in parents ) {
+            /* istanbul ignore else */
             if ( parents[ name ] !== undefined ) {
                 result[ name ] = parents[ name ];
             }
@@ -373,12 +387,14 @@ Command.prototype._getParsed = function () {
         name;
 
     for ( name in this.parsed ) {
+        /* istanbul ignore else */
         if ( ( item = this.parsed[ name ] ) !== undefined ) {
             result[ name ] = item;
         }
     }
 
     for ( name in this.options ) {
+        /* istanbul ignore else */
         if ( ( item = this.options[ name ] ) !== undefined &&
             !result[ name ] && item.defaultValue ) {
             result[ name ] = item.defaultValue;
@@ -388,12 +404,14 @@ Command.prototype._getParsed = function () {
     if ( this.parent ) {
         parents = this.parent._getParsed();
         for ( name in parents ) {
+            /* istanbul ignore else */
             if ( ( item = parents[ name ] ) !== undefined && !result[ name ] ) {
                 result[ name ] = item;
             }
         }
     }
 
+    /* istanbul ignore else */
     if ( this.args ) {
         this.args.forEach( function ( arg, index ) {
             result[ index ] = arg;
@@ -423,8 +441,6 @@ Command.prototype._parseArgv = function ( argv ) {
                 if ( argv[ i + 1 ] && valuePattern.test( argv[ i + 1 ] ) ) {
                     option.value = argv[ i + 1 ];
                     i++;
-                } else if ( option.defaultValue ) {
-                    option.value = option.defaultValue;
                 } else if ( option.unknown ) {
                     option.value = true;
                 } else {

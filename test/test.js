@@ -10,34 +10,42 @@ var rewire = require( 'rewire' ),
 describe( 'subcommander', function () {
     var oldExit,
         oldWrite,
-        oldWriteLine,
+        // oldWriteLine,
         output,
         code;
 
     beforeEach( function () {
         oldExit = process.exit;
-        oldWrite = sc.__get__( 'write' );
-        oldWriteLine = sc.__get__( 'writeLine' );
-        output = '',
-        code;
+        oldWrite = process.stdout.write;
+
+        // oldWrite = sc.__get__( 'write' );
+        // oldWriteLine = sc.__get__( 'writeLine' );
+        output = '';
+        code = 0;
 
         process.exit = function ( c ) {
             code = c;
         };
 
-        sc.__set__( 'write', function ( text ) {
+        process.stdout.write = function ( text ) {
             output += text;
-        } );
+        };
 
-        sc.__set__( 'writeLine', function ( text ) {
-            output += text;
-        } );
+        // sc.__set__( 'write', function ( text ) {
+        //     output += text;
+        // } );
+
+        // sc.__set__( 'writeLine', function ( text ) {
+        //     output += text;
+        // } );
     } );
 
     afterEach( function () {
         process.exit = oldExit;
-        sc.__set__( 'write', oldWrite );
-        sc.__set__( 'writeLine', oldWriteLine );
+        process.stdout.write = oldWrite;
+
+        // sc.__set__( 'write', oldWrite );
+        // sc.__set__( 'writeLine', oldWriteLine );
 
         sc.reset();
     } );
@@ -49,7 +57,7 @@ describe( 'subcommander', function () {
         );
     } );
 
-    it( 'should parse unknown -x option as a flag', function () {
+    it( 'should parse undefined -x option as a flag', function () {
         expect( sc.parse( [ '-f' ] ) ).to.deep.equal( {
             f: true
         } );
@@ -185,6 +193,37 @@ describe( 'subcommander', function () {
 
             expect( sc.options.foo.getUsage() ).to.deep.equal( expected );
         } );
+
+        it( 'should use empty string if no description given', function () {
+            var expected = {
+                name: '-f value, --foo value',
+                desc: '[bar]'
+            };
+
+            sc.option( 'foo', {
+                abbr: 'f',
+                desc: '',
+                default: 'bar',
+                valueName: 'value'
+            } );
+
+            expect( sc.options.foo.getUsage() ).to.deep.equal( expected );
+        } );
+
+        it( 'should throw an error if no value for option specified', function () {
+            sc.option( 'foo', {
+                abbr: 'f',
+                desc: 'desc for foo'
+            } );
+
+            sc.parse( [ '-f' ] );
+
+            expect( code ).to.equal( 1 );
+            expect( output ).to.equal(
+                '\n\u001b[1mError: \u001b[22mMissing value for \"foo\" option.\n\u001b[1m\n' +
+                'Usage:\u001b[22m  [options]\n\n\u001b[1mOptions:\n\u001b[22m\n  -f, --foo  desc for foo\n\n'
+            );
+        } );
     } );
 
     it( 'should define a command', function () {
@@ -207,9 +246,9 @@ describe( 'subcommander', function () {
 
         expect( code ).to.equal( 1 );
         expect( output ).to.equal(
-            '\u001b[31m\u001b[1mError: \u001b[22mMissing command for \"null\".' +
-            '\u001b[39m\u001b[1m\nUsage:\u001b[22m \u001b[33m <command>\u001b[39m\n\u001b[1m\u001b[3' +
-            '3mCommands:\n\u001b[39m\u001b[22m  foo  \u001b[90mdesc for foo\u001b[39m\n\n'
+            '\n\u001b[31m\u001b[1mError: \u001b[22mMissing command for \"null\".\u001b[39m\n' +
+            '\u001b[1m\nUsage:\u001b[22m \u001b[33m <command>\u001b[39m\n\n' +
+            '\u001b[1m\u001b[33mCommands:\n\u001b[39m\u001b[22m\n  foo  \u001b[90mdesc for foo\u001b[39m\n\n'
         );
     } );
 
@@ -280,13 +319,24 @@ describe( 'subcommander', function () {
                 .command( 'bar', {
                     desc: 'desc for bar',
                     callback: function () {}
-                } );
+                } )
+                .end()
+                .end();
 
             expect( sc.commands ).to.have.keys( [ 'foo', 'bar' ] );
             expect( sc.commands.foo.commands ).to.be.empty;
         } );
 
         it( 'should inherit its parent\'s options and its default values', function ( done ) {
+            function complete( parsed ) {
+                expect( parsed ).to.deep.equal( {
+                    'baz': 'quux',
+                    'quux': 'quax'
+                } );
+
+                done();
+            }
+
             sc
                 .command( 'foo', {
                     desc: 'desc for foo',
@@ -299,14 +349,7 @@ describe( 'subcommander', function () {
                 } )
                 .command( 'bar', {
                     desc: 'desc for bar',
-                    callback: function ( parsed ) {
-                        expect( parsed ).to.deep.equal( {
-                            'baz': 'quux',
-                            'quux': 'quax'
-                        } );
-
-                        done();
-                    }
+                    callback: complete
                 } )
                 .option( 'quux', {
                     abbr: 'q',
@@ -315,9 +358,25 @@ describe( 'subcommander', function () {
 
             sc.parse( [ 'foo', 'bar', '--quux', 'quax' ] );
         } );
+
+        it( 'should throw an error on unknown command', function () {
+            sc
+                .command( 'foo', {
+                    desc: 'desc for foo',
+                    callback: function () {}
+                } );
+
+            sc.parse( [ 'bar' ] );
+
+            expect( code ).to.equal( 1 );
+            expect( output ).to.equal(
+                '\n\u001b[1mError: \u001b[22mUnknown command \"bar\".\n\u001b[1m' +
+                '\nUsage:\u001b[22m  <command>\n\n\u001b[1mCommands:\n\u001b[22m\n  foo  desc for foo\n\n'
+            );
+        } );
     } );
 
-    it( 'should print usage information', function () {
+    it( 'should build usage information', function () {
         sc
             .option( 'baz', {
                 abbr: 'b',
@@ -342,13 +401,139 @@ describe( 'subcommander', function () {
 
         sc.usage();
 
-        expect( code ).to.equal( 1 );
         expect( output ).to.equal(
-            '\u001b[1m\nUsage:\u001b[22m \u001b[33m <command>\u001b[39m\u001b[36m [options]\u001b[39m\n' +
-            '\u001b[1m\u001b[33mCommands:\n\u001b[39m\u001b[22m  bar  \u001b[90mdesc for bar\u001b[39m\n' +
-            '  foo  \u001b[90mdesc for foo\u001b[39m\n\u001b[1m\u001b[36mOptions:\n' +
-            '\u001b[39m\u001b[22m  -b value, --baz value  \u001b[90mdesc for baz [quux]\u001b[39m\n' +
+            '\u001b[1m\nUsage:\u001b[22m \u001b[33m <command>\u001b[39m\u001b[36m [options]\u001b[39m\n\n' +
+            '\u001b[1m\u001b[33mCommands:\n\u001b[39m\u001b[22m\n' +
+            '  bar  \u001b[90mdesc for bar\u001b[39m\n  foo  \u001b[90mdesc for foo\u001b[39m\n\n' +
+            '\u001b[1m\u001b[36mOptions:\n\u001b[39m\u001b[22m\n' +
+            '  -b value, --baz value  \u001b[90mdesc for baz [quux]\u001b[39m\n' +
             '  -q, --quux             \u001b[90mdesc for quux\u001b[39m\n\n'
+        );
+    } );
+
+    it( 'should build usage information for a sub-command', function () {
+        sc
+            .option( 'baz', {
+                abbr: 'b',
+                desc: 'desc for baz',
+                valueName: 'value',
+                default: 'quux'
+            } )
+            .option( 'quux', {
+                abbr: 'q',
+                desc: 'desc for quux',
+                flag: true
+            } )
+            .command( 'foo', {
+                desc: 'desc for foo',
+                callback: function () {}
+            } )
+            .command( 'bar', {
+                desc: 'desc for bar',
+                callback: function () {}
+            } );
+
+        sc.parse( [ 'foo', 'bar', '-h' ] );
+
+        expect( output ).to.equal(
+            '\u001b[1m\nUsage:\u001b[22m  foo bar\u001b[36m [options]\u001b[39m\n\n' +
+            '\u001b[1m\u001b[36mOptions:\n\u001b[39m\u001b[22m\n' +
+            '  -b value, --baz value  \u001b[90mdesc for baz [quux]\u001b[39m\n' +
+            '  -q, --quux             \u001b[90mdesc for quux\u001b[39m\n\n'
+        );
+    } );
+
+    it( 'should print usage information if -h / --help flag passed', function () {
+        sc
+            .option( 'baz', {
+                abbr: 'b',
+                desc: 'desc for baz',
+                valueName: 'value',
+                default: 'quux'
+            } )
+            .option( 'quux', {
+                abbr: 'q',
+                desc: 'desc for quux',
+                flag: true
+            } )
+            .command( 'foo', {
+                desc: 'desc for foo',
+                callback: function () {}
+            } )
+            .end()
+            .command( 'bar', {
+                desc: 'desc for bar',
+                callback: function () {}
+            } );
+
+        sc.parse( [ '-h' ] );
+
+        expect( output ).to.equal(
+            '\u001b[1m\nUsage:\u001b[22m \u001b[33m <command>\u001b[39m\u001b[36m [options]\u001b[39m\n\n' +
+            '\u001b[1m\u001b[33mCommands:\n\u001b[39m\u001b[22m\n  bar  \u001b[90mdesc for bar\u001b[39m\n' +
+            '  foo  \u001b[90mdesc for foo\u001b[39m\n\n\u001b[1m\u001b[36mOptions:\n\u001b[39m\u001b[22m\n' +
+            '  -b value, --baz value  \u001b[90mdesc for baz [quux]\u001b[39m\n' +
+            '  -q, --quux             \u001b[90mdesc for quux\u001b[39m\n\n'
+        );
+    } );
+
+    it( 'should print usage information if -h / --help flag passed 2', function () {
+        sc
+            .option( 'baz', {
+                abbr: 'b',
+                desc: 'desc for baz',
+                valueName: 'value',
+                default: 'quux'
+            } )
+            .option( 'quux', {
+                abbr: 'q',
+                desc: 'desc for quux',
+                flag: true
+            } );
+
+        sc.parse( [ '-h' ] );
+
+        expect( output ).to.equal(
+            '\u001b[1m\nUsage:\u001b[22m \u001b[36m [options]\u001b[39m\n\n' +
+            '\u001b[1m\u001b[36mOptions:\n\u001b[39m\u001b[22m\n' +
+            '  -b value, --baz value  \u001b[90mdesc for baz [quux]\u001b[39m\n' +
+            '  -q, --quux             \u001b[90mdesc for quux\u001b[39m\n\n'
+        );
+    } );
+
+    it( 'should set script name', function () {
+        sc.scriptName( 'foo' );
+
+        sc.usage();
+
+        expect( output ).to.equal( '\u001b[1m\nUsage:\u001b[22m foo\n\n' );
+    } );
+
+    it( 'should allow to disable colors', function () {
+        sc
+            .noColors()
+            .option( 'baz', {
+                abbr: 'b',
+                desc: 'desc for baz',
+                valueName: 'value',
+                default: 'quux'
+            } )
+            .command( 'foo', {
+                desc: 'desc for foo',
+                callback: function () {}
+            } )
+            .end()
+            .command( 'bar', {
+                desc: 'desc for bar',
+                callback: function () {}
+            } );
+
+        sc.usage();
+
+        expect( output ).to.equal(
+            '\u001b[1m\nUsage:\u001b[22m  <command> [options]\n\n\u001b[1mCommands:\n' +
+            '\u001b[22m\n  bar  desc for bar\n  foo  desc for foo\n\n\u001b[1mOptions:\n' +
+            '\u001b[22m\n  -b value, --baz value  desc for baz [quux]\n\n'
         );
     } );
 } );
