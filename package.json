@@ -4,6 +4,7 @@
     "description": "Command-line argument parser with sub-command support",
     "main": "subcommander.js",
     "scripts": {
+        "lint": "jshint subcommander.js examples/ test/",
         "test": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat coverage/lcov.info | coveralls"
     },
     "repository": {
