@@ -1,6 +1,6 @@
 'use strict';
 
-var chalk = require( 'chalk' ),
+var chalk = require('chalk'),
     optionPattern = /(--([\w-]+)|-(\w+))(=(.*))?/,
     valuePattern = /^[^-].*/,
     useColors = true;
@@ -20,7 +20,7 @@ var chalk = require( 'chalk' ),
  * @param {*}       [prop.default]   Default value for the option
  * @constructor
  */
-function Option( name, props ) {
+function Option(name, props) {
     this.name = name;
     this.abbr = props.abbr;
     this.valueName = props.valueName;
@@ -33,29 +33,29 @@ function Option( name, props ) {
  * Return pre-formatted usage information.
  * @return {Object}
  */
-Option.prototype.getUsage = function () {
+Option.prototype.getUsage = function() {
     var string = [];
 
     /* istanbul ignore else */
-    if ( this.abbr ) {
-        string.push( '-' + this.abbr );
+    if (this.abbr) {
+        string.push('-' + this.abbr);
 
-        if ( !this.flag && this.valueName ) {
-            string.push( this.valueName );
+        if (!this.flag && this.valueName) {
+            string.push(this.valueName);
         }
 
-        string[ string.length - 1 ] += ',';
+        string[string.length - 1] += ',';
     }
 
-    string.push( '--' + this.name );
+    string.push('--' + this.name);
 
-    if ( !this.flag && this.valueName ) {
-        string.push( this.valueName );
+    if (!this.flag && this.valueName) {
+        string.push(this.valueName);
     }
 
     return {
-        name: string.join( ' ' ),
-        desc: this.desc + ( this.defaultValue ? ( this.desc ? ' ' : '' ) + '[' + this.defaultValue + ']' : '' )
+        name: string.join(' '),
+        desc: this.desc + (this.defaultValue ? (this.desc ? ' ' : '') + '[' + this.defaultValue + ']' : '')
     };
 };
 
@@ -69,7 +69,7 @@ Option.prototype.getUsage = function () {
  * @param {String} [props.callback] Callback function for the command
  * @constructor
  */
-function Command( name, props ) {
+function Command(name, props) {
     this.script = null;
     this.options = {};
     this.commands = {};
@@ -97,10 +97,10 @@ function Command( name, props ) {
  * @param  {*}       [prop.default]   Default value for the option
  * @return {Command}
  */
-Command.prototype.option = function ( name, props ) {
-    var option = new Option( name, props );
+Command.prototype.option = function(name, props) {
+    var option = new Option(name, props);
 
-    this.options[ name ] = option;
+    this.options[name] = option;
 
     return this;
 };
@@ -113,12 +113,12 @@ Command.prototype.option = function ( name, props ) {
  * @param  {String} [props.callback] Command's callback function executed if the command is run
  * @return {Command} (Sub-)command instance
  */
-Command.prototype.command = function ( name, props ) {
-    var command = new Command( name, props );
+Command.prototype.command = function(name, props) {
+    var command = new Command(name, props);
 
     command.parent = this;
 
-    this.commands[ name ] = command;
+    this.commands[name] = command;
 
     return command;
 };
@@ -128,7 +128,7 @@ Command.prototype.command = function ( name, props ) {
  * @param  {String} name Name of the executable
  * @return {Command}
  */
-Command.prototype.scriptName = function ( name ) {
+Command.prototype.scriptName = function(name) {
     this.script = name;
 
     return this;
@@ -138,7 +138,7 @@ Command.prototype.scriptName = function ( name ) {
  * Disable coloring in usage and error messages
  * @return {Command}
  */
-Command.prototype.noColors = function () {
+Command.prototype.noColors = function() {
     useColors = false;
 
     return this;
@@ -149,126 +149,128 @@ Command.prototype.noColors = function () {
  * @param  {Array.<String>} [argv] Array of arguments
  * @return {Object} List of parsed arguments
  */
-Command.prototype.parse = function ( argv ) {
-    var expectCommand = Object.keys( this.commands ).length > 0,
+Command.prototype.parse = function(argv) {
+    var expectCommand = Object.keys(this.commands).length > 0,
         command;
 
     /* istanbul ignore next */
-    argv = argv || process.argv.slice( 2 );
+    argv = argv || process.argv.slice(2);
 
-    if ( expectCommand ) {
-        if ( ( !argv[ 0 ] || argv[ 0 ][ 0 ] === '-' ) ) {
+    if (expectCommand) {
+        if ((!argv[0] || argv[0][0] === '-')) {
             // show usage information
-            if ( argv.some( function ( arg ) {
-                var match = optionPattern.exec( arg ),
-                    name = match && ( match[ 2 ] || match[ 3 ] );
+            if (argv.some(function(arg) {
+                    var match = optionPattern.exec(arg),
+                        name = match && (match[2] || match[3]);
 
-                return name === 'h' || name === 'help';
-            } ) ) {
+                    return name === 'h' || name === 'help';
+                })) {
                 return this.usage();
             } else {
-                this._printError( 'Missing command for "' + this._getScriptName() + '".' );
+                this._printError('Missing command for "' + this._getScriptName() + '".');
             }
-        } else if ( ( command = this.commands[ argv[ 0 ] ] ) ) {
-            return command.parse.call( command, argv.slice( 1 ) );
+        } else if ((command = this.commands[argv[0]])) {
+            return command.parse.call(command, argv.slice(1));
         } else {
-            this._printError( 'Unknown command "' + argv[ 0 ] + '".' );
+            this._printError('Unknown command "' + argv[0] + '".');
         }
     } else {
-        this._parseArgv( argv );
+        this._parseArgv(argv);
     }
 
-    if ( typeof this.callback == 'function' ) {
-        return this.callback( this._getParsed() );
+    var parsed = this._getParsed();
+
+    if (typeof this.callback == 'function') {
+        this.callback(parsed);
     }
 
-    return this._getParsed();
+    return parsed;
 };
 
 /**
  * End modifying current command and return to the parent
  * @return {Command} Parent command (if any)
  */
-Command.prototype.end = function () {
+Command.prototype.end = function() {
     return this.parent || this;
 };
 
 /**
  * Print command's usage message on the STDOUT.
  */
-Command.prototype.usage = function () {
+Command.prototype.usage = function() {
     var commandNames,
         optionNames,
         longest,
         options;
 
-    function spaces( num ) {
-        return new Array( num + 3 ).join( ' ' );
+    function spaces(num) {
+        return new Array(num + 3).join(' ');
     }
 
-    commandNames = Object.keys( this.commands );
+    commandNames = Object.keys(this.commands);
     options = this._getOptions();
-    optionNames = Object.keys( options );
+    optionNames = Object.keys(options);
 
     // print usage line
-    write( chalk.bold( '\nUsage:' ) );
-    write( ' ' + this._getCommandChain().join( ' ' ) );
+    write(chalk.bold('\nUsage:'));
+    write(' ' + this._getCommandChain().join(' '));
 
-    if ( commandNames.length ) {
-        write( yellow( ' <command>' ) );
+    if (commandNames.length) {
+        write(yellow(' <command>'));
     }
 
-    if ( optionNames.length ) {
-        write( cyan( ' [options]' ) );
+    if (optionNames.length) {
+        write(cyan(' [options]'));
     }
 
-    write( '\n' );
+    write('\n');
 
     // print commands list
-    if ( commandNames.length ) {
-        longest = commandNames.reduce( function ( a, b ) {
+    if (commandNames.length) {
+        longest = commandNames.reduce(function(a, b) {
             return a.length > b.length ? a : b;
-        } ).length;
+        }).length;
 
-        writeLine( chalk.bold( yellow( 'Commands:\n' ) ) );
-        commandNames.sort().forEach( function ( name ) {
-            var command = this.commands[ name ];
+        writeLine(chalk.bold(yellow('Commands:\n')));
+        commandNames.sort().forEach(function(name) {
+            var command = this.commands[name];
 
-            write( '  ' + command.name );
-            write( spaces( longest - command.name.length ) );
-            write( grey( command.desc ) + '\n' );
-        }, this );
+            write('  ' + command.name);
+            write(spaces(longest - command.name.length));
+            write(grey(command.desc) + '\n');
+        }, this);
     }
 
     // print options list
-    if ( optionNames.length ) {
-        optionNames.forEach( function ( name ) {
-            options[ name ] = options[ name ].getUsage();
-        } );
+    if (optionNames.length) {
+        optionNames.forEach(function(name) {
+            options[name] = options[name].getUsage();
+        });
 
-        longest = optionNames.reduce( function ( a, b ) {
-            return options[ a ].name.length > options[ b ].name.length ? a : b;
-        } );
-        longest = options[ longest ].name.length;
+        longest = optionNames.reduce(function(a, b) {
+            return options[a].name.length > options[b].name.length ? a : b;
+        });
+        longest = options[longest].name.length;
 
-        writeLine( chalk.bold( cyan( 'Options:\n' ) ) );
-        optionNames.sort().forEach( function ( name ) {
-            var option = options[ name ];
+        writeLine(chalk.bold(cyan('Options:\n')));
+        optionNames.sort().forEach(function(name) {
+            var option = options[name];
 
-            write( '  ' + option.name );
-            write( spaces( longest - option.name.length ) );
-            write( grey( option.desc ) + '\n' );
-        } );
+            write('  ' + option.name);
+            write(spaces(longest - option.name.length));
+            write(grey(option.desc) + '\n');
+        });
     }
 
-    write( '\n' );
+    write('\n');
 };
 
 /**
  * Resets all properties of the command
  * @return {Command}
  */
-Command.prototype.reset = function () {
+Command.prototype.reset = function() {
     this.script = null;
     this.options = {};
     this.commands = {};
@@ -289,7 +291,7 @@ Command.prototype.reset = function () {
  * @return {Object}
  * @private
  */
-Command.prototype._getOption = function ( arg ) {
+Command.prototype._getOption = function(arg) {
     var options = this._getOptions(),
         option,
         match,
@@ -298,19 +300,19 @@ Command.prototype._getOption = function ( arg ) {
         o;
 
     // matches --foo, -f and --foo=<value>
-    if ( ( match = optionPattern.exec( arg ) ) ) {
-        name = match[ 2 ] || match[ 3 ];
-        value = match[ 5 ];
+    if ((match = optionPattern.exec(arg))) {
+        name = match[2] || match[3];
+        value = match[5];
 
         // handle -h / --help and stop execution
-        if ( name === 'help' || name === 'h' ) {
+        if (name === 'help' || name === 'h') {
             this.usage();
-            process.exit( 0 );
+            process.exit(0);
         }
 
-        for ( o in options ) {
-            if ( ( option = options[ o ] ) !== undefined &&
-                name === o || name === option.abbr ) {
+        for (o in options) {
+            if ((option = options[o]) !== undefined &&
+                name === o || name === option.abbr) {
                 return {
                     name: option.name,
                     defaultValue: option.defaultValue,
@@ -334,10 +336,10 @@ Command.prototype._getOption = function ( arg ) {
  * @param {String} message Error message to print
  * @private
  */
-Command.prototype._printError = function ( message ) {
-    writeLine( red( chalk.bold( 'Error: ' ) + message ) );
+Command.prototype._printError = function(message) {
+    writeLine(red(chalk.bold('Error: ') + message));
     this.usage();
-    process.exit( 1 );
+    process.exit(1);
 };
 
 /**
@@ -345,7 +347,7 @@ Command.prototype._printError = function ( message ) {
  * @return {String}
  * @private
  */
-Command.prototype._getScriptName = function () {
+Command.prototype._getScriptName = function() {
     return this.name || this.script;
 };
 
@@ -354,24 +356,24 @@ Command.prototype._getScriptName = function () {
  * @return {Object}
  * @private
  */
-Command.prototype._getOptions = function () {
+Command.prototype._getOptions = function() {
     var result = {},
         parents,
         name;
 
-    for ( name in this.options ) {
+    for (name in this.options) {
         /* istanbul ignore else */
-        if ( this.options[ name ] !== undefined ) {
-            result[ name ] = this.options[ name ];
+        if (this.options[name] !== undefined) {
+            result[name] = this.options[name];
         }
     }
 
-    if ( this.parent ) {
+    if (this.parent) {
         parents = this.parent._getOptions();
-        for ( name in parents ) {
+        for (name in parents) {
             /* istanbul ignore else */
-            if ( parents[ name ] !== undefined ) {
-                result[ name ] = parents[ name ];
+            if (parents[name] !== undefined) {
+                result[name] = parents[name];
             }
         }
     }
@@ -384,42 +386,42 @@ Command.prototype._getOptions = function () {
  * @return {Object}
  * @private
  */
-Command.prototype._getParsed = function () {
+Command.prototype._getParsed = function() {
     var result = {},
         parents,
         item,
         name;
 
-    for ( name in this.parsed ) {
+    for (name in this.parsed) {
         /* istanbul ignore else */
-        if ( ( item = this.parsed[ name ] ) !== undefined ) {
-            result[ name ] = item;
+        if ((item = this.parsed[name]) !== undefined) {
+            result[name] = item;
         }
     }
 
-    for ( name in this.options ) {
+    for (name in this.options) {
         /* istanbul ignore else */
-        if ( ( item = this.options[ name ] ) !== undefined &&
-            !result[ name ] && item.defaultValue ) {
-            result[ name ] = item.defaultValue;
+        if ((item = this.options[name]) !== undefined &&
+            !result[name] && item.defaultValue) {
+            result[name] = item.defaultValue;
         }
     }
 
-    if ( this.parent ) {
+    if (this.parent) {
         parents = this.parent._getParsed();
-        for ( name in parents ) {
+        for (name in parents) {
             /* istanbul ignore else */
-            if ( ( item = parents[ name ] ) !== undefined && !result[ name ] ) {
-                result[ name ] = item;
+            if ((item = parents[name]) !== undefined && !result[name]) {
+                result[name] = item;
             }
         }
     }
 
     /* istanbul ignore else */
-    if ( this.args ) {
-        this.args.forEach( function ( arg, index ) {
-            result[ index ] = arg;
-        } );
+    if (this.args) {
+        this.args.forEach(function(arg, index) {
+            result[index] = arg;
+        });
     }
 
     return result;
@@ -430,31 +432,31 @@ Command.prototype._getParsed = function () {
  * @param {Array.<String>} argv Array of arguments
  * @private
  */
-Command.prototype._parseArgv = function ( argv ) {
+Command.prototype._parseArgv = function(argv) {
     var option,
         arg,
         i;
 
-    for ( i = 0; i < argv.length; i++ ) {
-        arg = argv[ i ];
+    for (i = 0; i < argv.length; i++) {
+        arg = argv[i];
 
         // it's an option
-        if ( ( option = this._getOption( arg ) ) ) {
-            if ( !option.value ) {
+        if ((option = this._getOption(arg))) {
+            if (!option.value) {
                 // take the value from the next argument
-                if ( argv[ i + 1 ] && valuePattern.test( argv[ i + 1 ] ) ) {
-                    option.value = argv[ i + 1 ];
+                if (argv[i + 1] && valuePattern.test(argv[i + 1])) {
+                    option.value = argv[i + 1];
                     i++;
-                } else if ( option.unknown ) {
+                } else if (option.unknown) {
                     option.value = true;
                 } else {
-                    this._printError( 'Missing value for "' + option.name + '" option.' );
+                    this._printError('Missing value for "' + option.name + '" option.');
                 }
             }
 
-            this.parsed[ option.name ] = option.value;
+            this.parsed[option.name] = option.value;
         } else {
-            this.args.push( arg );
+            this.args.push(arg);
         }
     }
 };
@@ -464,10 +466,10 @@ Command.prototype._parseArgv = function ( argv ) {
  * @return {Array.<String>}
  * @private
  */
-Command.prototype._getCommandChain = function () {
-    var result = [ this.script || this.name ];
+Command.prototype._getCommandChain = function() {
+    var result = [this.script || this.name];
 
-    return this.parent ? this.parent._getCommandChain().concat( result ) : result;
+    return this.parent ? this.parent._getCommandChain().concat(result) : result;
 };
 
 /**
@@ -475,8 +477,8 @@ Command.prototype._getCommandChain = function () {
  * @param {String} text Text to write
  * @private
  */
-function write( text ) {
-    process.stdout.write( text );
+function write(text) {
+    process.stdout.write(text);
 }
 
 /**
@@ -484,28 +486,28 @@ function write( text ) {
  * @param {String} text Text to write
  * @private
  */
-function writeLine( text ) {
-    process.stdout.write( '\n' + text + '\n' );
+function writeLine(text) {
+    process.stdout.write('\n' + text + '\n');
 }
 
-function red( text ) {
-    return useColors ? chalk.red( text ) : text;
+function red(text) {
+    return useColors ? chalk.red(text) : text;
 }
 
-function yellow( text ) {
-    return useColors ? chalk.yellow( text ) : text;
+function yellow(text) {
+    return useColors ? chalk.yellow(text) : text;
 }
 
-function cyan( text ) {
-    return useColors ? chalk.cyan( text ) : text;
+function cyan(text) {
+    return useColors ? chalk.cyan(text) : text;
 }
 
-function grey( text ) {
-    return useColors ? chalk.grey( text ) : text;
+function grey(text) {
+    return useColors ? chalk.grey(text) : text;
 }
 
 module.exports = new Command();
 
-module.exports.script = require( 'path' ).basename( process.argv[ 1 ] );
+module.exports.script = require('path').basename(process.argv[1]);
 module.exports.Option = Option;
 module.exports.Command = Command;
