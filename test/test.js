@@ -10,12 +10,14 @@ var rewire = require('rewire'),
 describe('subcommander', function() {
     var oldExit,
         oldWrite,
+        oldWriteLine,
         output,
         code;
 
     beforeEach(function() {
         oldExit = process.exit;
-        oldWrite = process.stdout.write;
+        oldWrite = sc.__get__('write');
+        oldWriteLine = sc.__get__('writeLine');
 
         output = '';
         code = 0;
@@ -24,15 +26,19 @@ describe('subcommander', function() {
             code = c;
         };
 
-        process.stdout.write = function(text) {
+        sc.__set__('write', function(text) {
             output += text;
-        };
+        });
+
+        sc.__set__('writeLine', function(text) {
+            output += '\n' + text + '\n';
+        });
     });
 
     afterEach(function() {
         process.exit = oldExit;
-        process.stdout.write = oldWrite;
-
+        sc.__set__('write', oldWrite);
+        sc.__set__('writeLine', oldWriteLine);
         sc.reset();
     });
 
@@ -287,6 +293,22 @@ describe('subcommander', function() {
             });
 
             returned = sc.parse(['foo', '--bar', 'baz', 'quux']);
+        });
+
+        it('should allow commands containing dashes', function(done) {
+            sc.command('has-dash', {
+                desc: 'contains a dash in its name',
+                callback: function(parsed) {
+                    expect(parsed).to.deep.equal({
+                        f: 'foo',
+                        bar: 'bar'
+                    });
+
+                    done();
+                }
+            });
+
+            sc.parse(['has-dash', '-f', 'foo', '--bar', 'bar']);
         });
     });
 
