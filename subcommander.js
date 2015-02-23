@@ -1,7 +1,7 @@
 'use strict';
 
 var chalk = require('chalk'),
-    optionPattern = /(--([\w-]+)|-(\w+))(=(.*))?/,
+    optionPattern = /^(--([\w-]+)|-(\w+))(=(.*))?/,
     valuePattern = /^[^-].*/,
     useColors = true;
 
@@ -477,6 +477,7 @@ Command.prototype._getCommandChain = function() {
  * @param {String} text Text to write
  * @private
  */
+/* istanbul ignore next */
 function write(text) {
     process.stdout.write(text);
 }
@@ -486,6 +487,7 @@ function write(text) {
  * @param {String} text Text to write
  * @private
  */
+/* istanbul ignore next */
 function writeLine(text) {
     process.stdout.write('\n' + text + '\n');
 }
