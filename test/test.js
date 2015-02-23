@@ -310,14 +310,39 @@ describe('subcommander', function() {
 
             sc.parse(['has-dash', '-f', 'foo', '--bar', 'bar']);
         });
+
+        it('should execute its callback even if it has sub-commands defined', function(done) {
+            var returned;
+
+            sc.callback = function(parsed) {
+                process.nextTick(function() {
+                    expect(returned).to.deep.equal(parsed);
+                    done();
+                });
+            };
+
+            sc
+                .option('version', {
+                    abbr: 'v',
+                    desc: 'desc for version',
+                    flag: true
+                })
+                .command('foo', {
+                    desc: 'desc for foo',
+                    callback: function() {
+                        throw new Error('You should never call me!');
+                    }
+                });
+
+            returned = sc.parse(['--version', 'foo', 'bar']);
+        });
     });
 
     describe('sub-command', function() {
         it('should execute its callback with parsed arguments', function(done) {
             sc
                 .command('foo', {
-                    desc: 'desc for foo',
-                    callback: function() {}
+                    desc: 'desc for foo'
                 })
                 .command('bar', {
                     desc: 'desc for bar',
@@ -363,8 +388,7 @@ describe('subcommander', function() {
 
             sc
                 .command('foo', {
-                    desc: 'desc for foo',
-                    callback: function() {}
+                    desc: 'desc for foo'
                 })
                 .option('baz', {
                     abbr: 'b',

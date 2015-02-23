@@ -2,6 +2,7 @@
 
 var chalk = require('chalk'),
     optionPattern = /^(--([\w-]+)|-(\w+))(=(.*))?/,
+    helpPattern = /(\s|^)(-h|--help)(\s|$)/,
     valuePattern = /^[^-].*/,
     useColors = true;
 
@@ -151,34 +152,43 @@ Command.prototype.noColors = function() {
  */
 Command.prototype.parse = function(argv) {
     var expectCommand = Object.keys(this.commands).length > 0,
-        command;
+        command,
+        parsed;
 
     /* istanbul ignore next */
     argv = argv || process.argv.slice(2);
 
+    // contains sub-commands
     if (expectCommand) {
-        if ((!argv[0] || argv[0][0] === '-')) {
+        // no argument or just an option
+        if (!argv[0] || argv[0].charAt(0) === '-') {
             // show usage information
-            if (argv.some(function(arg) {
-                    var match = optionPattern.exec(arg),
-                        name = match && (match[2] || match[3]);
-
-                    return name === 'h' || name === 'help';
-                })) {
+            if (helpPattern.test(argv.join(' '))) {
                 return this.usage();
-            } else {
-                this._printError('Missing command for "' + this._getScriptName() + '".');
             }
-        } else if ((command = this.commands[argv[0]])) {
-            return command.parse.call(command, argv.slice(1));
-        } else {
-            this._printError('Unknown command "' + argv[0] + '".');
+
+            // call the callback with parsed arguments
+            if (typeof this.callback == 'function') {
+                this._parseArgv(argv);
+                parsed = this._getParsed();
+                this.callback(parsed);
+
+                return parsed;
+            }
+
+            return this._printError('Missing command for "' + this._getScriptName() + '".');
         }
-    } else {
-        this._parseArgv(argv);
+
+        // handle a command
+        if ((command = this.commands[argv[0]])) {
+            return command.parse.call(command, argv.slice(1));
+        }
+
+        return this._printError('Unknown command "' + argv[0] + '".');
     }
 
-    var parsed = this._getParsed();
+    this._parseArgv(argv);
+    parsed = this._getParsed();
 
     if (typeof this.callback == 'function') {
         this.callback(parsed);
