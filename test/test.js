@@ -155,6 +155,28 @@ describe('subcommander', function() {
             expect(sc.parse(['bar'])).to.deep.equal(expected);
         });
 
+        it('#8 should accept falsy default values', function() {
+            var expected = {
+                foo: 0,
+                bar: false,
+                '0': 'bar'
+            };
+
+            sc
+            .option('foo', {
+                abbr: 'f',
+                desc: 'desc for foo',
+                default: 0
+            })
+            .option('bar', {
+                abbr: 'b',
+                desc: 'desc for bar',
+                default: false
+            });
+
+            expect(sc.parse(['bar'])).to.deep.equal(expected);
+        });
+
         it('should override a default value', function() {
             var expected = {
                 foo: 'quux',

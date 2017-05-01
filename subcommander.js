@@ -56,7 +56,7 @@ Option.prototype.getUsage = function() {
 
     return {
         name: string.join(' '),
-        desc: this.desc + (this.defaultValue ? (this.desc ? ' ' : '') + '[' + this.defaultValue + ']' : '')
+        desc: this.desc + (this.defaultValue !== undefined ? (this.desc ? ' ' : '') + '[' + this.defaultValue + ']' : '')
     };
 };
 
@@ -412,7 +412,8 @@ Command.prototype._getParsed = function() {
     for (name in this.options) {
         /* istanbul ignore else */
         if ((item = this.options[name]) !== undefined &&
-            !result[name] && item.defaultValue) {
+            !result[name] &&
+            item.defaultValue !== undefined) {
             result[name] = item.defaultValue;
         }
     }
